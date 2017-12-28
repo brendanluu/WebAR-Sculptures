@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title></title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+		<script src="https://aframe.io/releases/0.7.0/aframe.min.js"></script>
+    <script src="https://rawgit.com/google-ar/three.ar.js/f9603ee/dist/three.ar.js"></script>
+    <script src="https://rawgit.com/chenzlabs/aframe-ar/827e9db/dist/aframe-ar.min.js"></script>
+    <script src="https://cdn.rawgit.com/tizzle/aframe-orbit-controls-component/3f98707c/dist/aframe-orbit-controls-component.min.js"></script>
+
+
+
+
+
+	</head>
+	<body>
+
+    <button type="button" id="ARon" onclick="turnARon()">Click Me!</button>
+    <button type="button" id="ARoff" onclick="turnARoff()">Click Me!</button>
+
+
+
+		<a-scene>
+			<a-assets>
+				<a-asset-item src="https://cdn.glitch.com/843c8e83-ac9e-499e-8aba-1332cd1fe4a6%2Fsilogo.mtl?1502470550479" id="samsung-internet-mtl"></a-asset-item>
+				<a-asset-item src="https://cdn.glitch.com/843c8e83-ac9e-499e-8aba-1332cd1fe4a6%2Fsilogo_small.obj?1502705824920" id="samsung-internet-obj"></a-asset-item>
+			</a-assets>
+
+        <a-entity id="camera"
+              camera="fov: 80; zoom: 1;"
+              position="0 0 5"
+              mouse-cursor
+              orbit-controls="
+                  autoRotate: false;
+                  target: #model-non-ar;
+                  enableDamping: true;
+                  dampingFactor: 0.125;
+                  rotateSpeed:0.25;
+                  minDistance:1;
+                  maxDistance:100;
+                  ">
+          </a-entity>
+
+          <a-entity id="model-non-ar" geometry="primitive: box; "
+          material="color: red"
+          position="0 0 0"></a-entity>
+
+
+      <!-- Use AR raycaster, and set raycaster to ignore all A-Frame objects like logos. -->
+      <a-entity ar-raycaster raycaster="objects:none"></a-entity>
+      <!-- Declare a ring to use as the raycaster intersection mark. -->
+      <a-ring id="mark" rotation="-90 0 0" radius-inner="0.01" radius-outer="0.02"></a-ring>
+		</a-scene>
+    <script>
+      var raycaster = document.querySelector('[ar-raycaster]');
+      var mark = document.querySelector('#mark');
+      var nonAR = document.querySelector("#model-non-ar");
+      var el = document.createElement('a-entity');
+      AFRAME.scenes[0].appendChild(el);
+
+      raycaster.addEventListener('raycaster-intersected', function (evt) {
+        // Turn the mark green and move it to the intersection point.
+        mark.setAttribute('color', 'blue');
+  });
+      raycaster.addEventListener('raycaster-intersection', function (evt) {
+        const content = `
+        <a-entity id="model-ar" geometry="primitive: box; "
+        material="color: red"
+        position="0 0 0"></a-entity>`;
+
+        window.addEventListener('click', function () {
+          // Put the logo where the mark is.
+          el.innerHTML = content;
+          el.setAttribute('scale', '0.1, 0.1, 0.1');
+          el.setAttribute('position', mark.getAttribute('position'));
+        });
+
+        // Turn the mark green and move it to the intersection point.
+        mark.setAttribute('color', 'green');
+        // FIXME: lerp position
+        mark.setAttribute('position', evt.detail.intersections[0].point);
+      });
+
+      raycaster.addEventListener('raycaster-intersection-cleared', function (evt) {
+        // Turn the mark red.  FIXME: lerp position
+        mark.setAttribute('color', 'red');
+      });
+
+      document.getElementById('ARon').onclick = function turnARon() {
+      document.querySelector('a-scene').setAttribute('ar', {takeOverCamera: true} );
+      document.getElementById('ARoff').style.visibility='visible';
+      nonAR.setAttribute("visible",false);
+      el.setAttribute("visible",true);
+      console.log('clicked');
+    };
+
+    document.getElementById('ARoff').onclick = function turnARoff() {
+      var isAR = document.querySelector("#model-ar");
+    document.querySelector('a-scene').removeAttribute('ar');
+    document.querySelector('a-scene').removeAttribute('mozilla-xr-ar');
+    document.querySelector('a-scene').removeAttribute('three-ar');
+    document.querySelector('a-scene').removeAttribute('three-ar-planes');
+    el.setAttribute("visible",false);
+    nonAR.setAttribute("visible",true);
+
+
+    console.log('removed');
+  };
+
+
+    </script>
+
+    <!-- <script>
+
+      var nonAR = document.querySelector("#model-non-ar");
+
+
+      document.getElementById('ARon').onclick = function turnARon() {
+      document.querySelector('a-scene').setAttribute('ar', {takeOverCamera: true} );
+      document.getElementById('ARoff').style.visibility='visible';
+      nonAR.setAttribute("visible",false);
+      console.log('clicked');
+    };
+
+    document.getElementById('ARoff').onclick = function turnARoff() {
+      var isAR = document.querySelector("#model-ar");
+    document.querySelector('a-scene').removeAttribute('ar');
+    document.querySelector('a-scene').removeAttribute('mozilla-xr-ar');
+    document.querySelector('a-scene').removeAttribute('three-ar');
+    document.querySelector('a-scene').removeAttribute('three-ar-planes');
+    isAR.setAttribute("visible",false);
+    nonAR.setAttribute("visible",true);
+
+
+    console.log('removed');
+  };
+
+
+    </script> -->
+
+
+	</body>
+</html>
